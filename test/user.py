@@ -97,7 +97,8 @@ class UserFactory:
 	def __getRawComments(self, fileName):
 		sentences = list()
 		try:
-			file = open(fileName, 'rb')
+			file = open(fileName, 'rb') # Python 2 version
+			# file = open(fileName, 'r') # Python 3 version
 			with file as csvfile:
 				reader = csv.reader(csvfile, delimiter="\n") # read per line
 				for row in reader:
