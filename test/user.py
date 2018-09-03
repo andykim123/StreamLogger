@@ -61,13 +61,43 @@ class User:
 
 	def calculateCommentSentiments(self):
 		for comment in self.comments:
-			comment.calculateSentimentIntensity()
+			if comment.sentiment == 0:
+				comment.calculateSentimentIntensity()
 
 	def getUserSentiment(self):
 		sum = 0
 		for comment in self.comments:
 			sum = sum + comment.sentiment.compound
 		self.sentiment = sum / len(self.comments)
+
+# class which includes the dictionary of users with comments.
+# used in chatbot directly.
+class UserDictionary:
+
+	def __init__(self):
+		self.userDict = dict()
+
+	def addComment(self, user, content, timestamp = 0, sentiment = 0):
+		self.__addCommentToUserDict(user, Comment(content = content, timestamp = timestamp, sentiment = sentiment))
+
+	def __addCommentToUserDict(self, user, comment):
+		if(self.userDict.get(user)==None):
+			self.userDict[user] = User(inputName = user, inputComments = [comment])
+		else:
+			self.userDict[user].addComments(comment)
+
+	def calculateUsersSentiments(self):
+		for key in self.userDict:
+			user = self.userDict[key]
+			user.calculateCommentSentiments()
+			user.getUserSentiment()
+
+	def printUserSentimentAverage(self):
+		sum = 0
+		for key in self.userDict:
+			sum = sum + self.userDict[key].sentiment
+		result = sum / len(self.userDict)
+		print("User Sentiment Average: "+(str)(result))
 
 
 # class which creates dictionary of users from 
@@ -77,7 +107,7 @@ class User:
 class UserFactory:
 
 	# public function that will be used to get dictionary of users
-	def getUsers(self, fileName):
+	def getUsersFromFile(self, fileName):
 		return self.__buildUserDicts(self.__getRawComments(fileName))
 
 	# private function to build user dictionary
