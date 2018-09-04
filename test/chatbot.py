@@ -12,6 +12,7 @@ import sys
 import irc.bot
 import requests
 import info
+import datetime
 from user import UserDictionary
 
 class TwitchBot(irc.bot.SingleServerIRCBot):
@@ -20,6 +21,7 @@ class TwitchBot(irc.bot.SingleServerIRCBot):
         self.token = token
         self.channel = '#' + channel
         self.userDict = UserDictionary()
+        self.lastUpdatedTime = datetime.datetime.now()
 
         # Get the channel id, we will need this for v5 API calls
         url = 'https://api.twitch.tv/kraken/users?login=' + channel
@@ -55,9 +57,19 @@ class TwitchBot(irc.bot.SingleServerIRCBot):
             if temp[0] == temp[1].split('@')[0]:
                 username = temp[0]
                 content = e.arguments[0]
-                timestamp = e.tags[8].get('value', 0)
+                # if a content only contains emojis, get the right timestamp
+                if e.tags[3].get('key', "") == "emote-only" and e.tags[9].get('key',"") == "tmi-sent-ts":
+                    timestamp = e.tags[9].get('value', 0)
+                else:
+                    timestamp = e.tags[8].get('value', 0)
                 print(temp[0] + ": " + content + "  /  " + (str)(timestamp))
+                # print(e)
                 self.userDict.addComment(username, content, timestamp)
+
+            if (datetime.datetime.now() - self.lastUpdatedTime).seconds > 60:
+                self.userDict.calculateUsersSentiments()
+                self.userDict.printUserSentimentAverage()
+                self.lastUpdatedTime = datetime.datetime.now()
         return
 
 """
